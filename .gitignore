@@ -1,0 +1,23 @@
+# Environment variables — NEVER commit these
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Local MongoDB data
+data/
+mongo_data/
+mongo_log/
+
+# Uploaded files
+uploads/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
