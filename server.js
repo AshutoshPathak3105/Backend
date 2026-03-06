@@ -9,6 +9,15 @@ const fs = require('fs');
 
 dotenv.config();
 
+// ── Validate required environment variables before anything else ─────────────
+const REQUIRED_ENV = ['MONGO_URI', 'JWT_SECRET'];
+const missingEnv = REQUIRED_ENV.filter(key => !process.env[key]);
+if (missingEnv.length > 0) {
+    console.error('❌ Missing required environment variables:', missingEnv.join(', '));
+    console.error('   Set them in your .env file locally or in the Render dashboard under Environment.');
+    process.exit(1);
+}
+
 const app = express();
 
 // Ensure upload directories exist on startup
