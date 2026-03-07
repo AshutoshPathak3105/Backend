@@ -35,8 +35,11 @@ const limiter = rateLimit({
 
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 20,
-    message: { success: false, message: 'Too many login attempts, please try again in 15 minutes.' }
+    max: process.env.NODE_ENV === 'development' ? 500 : 50,
+    skip: (req) => process.env.NODE_ENV === 'development',
+    message: { success: false, message: 'Too many login attempts, please try again in 15 minutes.' },
+    standardHeaders: true,
+    legacyHeaders: false,
 });
 
 // Middleware
@@ -146,3 +149,4 @@ mongoose.connect(process.env.MONGO_URI)
     });
 
 module.exports = app;
+
