@@ -22,12 +22,14 @@ exports.register = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Email already registered' });
         }
 
-        const existingPhone = await User.findOne({ phone });
-        if (existingPhone) {
-            return res.status(400).json({ success: false, message: 'Phone number already registered' });
+        if (phone) {
+            const existingPhone = await User.findOne({ phone });
+            if (existingPhone) {
+                return res.status(400).json({ success: false, message: 'Phone number already registered' });
+            }
         }
 
-        const user = await User.create({ name, email, phone, password, role: role || 'jobseeker' });
+        const user = await User.create({ name, email, phone: phone || undefined, password, role: role || 'jobseeker' });
         const token = generateToken(user._id);
 
         // Auto-create company profile if registering as employer

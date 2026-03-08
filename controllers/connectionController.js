@@ -196,10 +196,10 @@ exports.browsePeople = async (req, res) => {
         const { q, page = 1, limit = 12 } = req.query;
         const skip = (parseInt(page) - 1) * parseInt(limit);
 
-        // Exclude self, already-connected users, non-jobseekers, and seeded/fake accounts (must have logged in at least once)
+        // Exclude self, already-connected users, and dummy/seeded accounts (must have logged in at least once)
         const excludeIds = [userId, ...(currentUser.connections || [])];
 
-        let filter = { _id: { $nin: excludeIds }, isActive: true, role: 'jobseeker', lastLogin: { $exists: true, $ne: null } };
+        let filter = { _id: { $nin: excludeIds }, isActive: true, lastLogin: { $exists: true, $ne: null } };
         if (q && q.trim().length >= 2) {
             const regex = { $regex: q.trim(), $options: 'i' };
             filter.$or = [{ name: regex }, { headline: regex }, { skills: regex }, { location: regex }];
