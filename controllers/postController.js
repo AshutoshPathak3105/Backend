@@ -20,7 +20,7 @@ const storage = multer.diskStorage({
 const fileFilter = (req, file, cb) => {
     const allowedExts = /jpeg|jpg|png|gif|webp|mp4|mov|avi|webm|heic|heif/;
     const allowedMime = /image\/(jpeg|jpg|png|gif|webp|heic|heif)|video\/(mp4|quicktime|x-msvideo|webm|avi|mov)/;
-    const extOk  = allowedExts.test(path.extname(file.originalname).toLowerCase());
+    const extOk = allowedExts.test(path.extname(file.originalname).toLowerCase());
     const mimeOk = allowedMime.test(file.mimetype);
     if (extOk || mimeOk) {
         cb(null, true);
@@ -33,8 +33,7 @@ exports.upload = multer({ storage, fileFilter, limits: { fileSize: 50 * 1024 * 1
 
 // helper – base URL for serving local uploads
 const mediaURL = (filename) => {
-    const base = (process.env.CLIENT_URL || 'http://localhost:5000').split(',')[0].trim().replace(':3000', ':5000');
-    return `${base}/uploads/posts/${filename}`;
+    return `/uploads/posts/${filename}`;
 };
 
 // ── GET /posts  (feed – newest first, paginated) ─────────────────────────────

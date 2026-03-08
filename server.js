@@ -20,6 +20,11 @@ if (missingEnv.length > 0) {
 
 const app = express();
 
+// Trust proxy for production (Render/Vercel) to get real user IP for rate limits
+if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1);
+}
+
 // Ensure upload directories exist on startup
 ['uploads/resumes', 'uploads/avatars', 'uploads/logos', 'uploads/messages', 'uploads/posts'].forEach(dir => {
     const fullPath = path.join(__dirname, dir);
