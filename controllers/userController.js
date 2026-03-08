@@ -212,6 +212,20 @@ exports.uploadResume = async (req, res) => {
             }
             user.resume = `/uploads/resumes/${req.file.filename}`;
             user.resumeName = req.file.originalname;
+
+            // ── Sync with existing applications ─────────────────────────────
+            // When a user updates their profile resume, we ensure all their 
+            // open applications point to the NEW file, since the OLD file 
+            // was just deleted from the disk above.
+            try {
+                await Application.updateMany(
+                    { applicant: user._id },
+                    { resume: user.resume, resumeName: user.resumeName }
+                );
+            } catch (err) {
+                console.error('Failed to sync resume with applications:', err);
+            }
+            // ────────────────────────────────────────────────────────────────
         } else if (req.body.resume) {
             // Base64 fallback
             user.resume = req.body.resume;

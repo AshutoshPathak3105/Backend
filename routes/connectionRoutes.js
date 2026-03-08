@@ -9,11 +9,15 @@ const {
     toggleFollow,
     removeConnection,
     browsePeople,
-    cancelRequest
+    cancelRequest,
+    getFollowers,
+    getFollowing
 } = require('../controllers/connectionController');
 
 router.get('/', protect, getConnections);
 router.get('/requests', protect, getRequests);
+router.get('/followers', protect, getFollowers);
+router.get('/following', protect, getFollowing);
 router.get('/people', protect, browsePeople);
 router.post('/request/:id', protect, sendRequest);
 router.delete('/request/:id', protect, cancelRequest);

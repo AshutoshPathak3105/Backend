@@ -276,3 +276,27 @@ exports.removeConnection = async (req, res) => {
         res.status(500).json({ success: false, message: err.message });
     }
 };
+
+// @desc    Get followers of current user
+// @route   GET /api/connections/followers
+exports.getFollowers = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id)
+            .populate('followers', 'name avatar role headline');
+        res.json({ success: true, followers: user.followers });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+// @desc    Get following list of current user
+// @route   GET /api/connections/following
+exports.getFollowing = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id)
+            .populate('following', 'name avatar role headline');
+        res.json({ success: true, following: user.following });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+};

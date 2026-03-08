@@ -11,10 +11,12 @@ const notificationSchema = new mongoose.Schema({
             'job_posted',         // admin notification
             'profile_view',       // jobseeker receives
             'interview_scheduled',// jobseeker receives
+            'interview_cancelled',// jobseeker receives
             'offer_received',     // jobseeker receives
             'friend_post',        // friend receives
             'connection_req',     // user receives
             'connection_accept',  // user receives
+            'follow',             // user receives when followed
             'system'              // general system notification
         ],
         required: true
