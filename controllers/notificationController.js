@@ -86,5 +86,15 @@ exports.clearReadNotifications = async (req, res) => {
     }
 };
 
+// @desc Delete all notifications for current user
+exports.deleteAllNotifications = async (req, res) => {
+    try {
+        await Notification.deleteMany({ recipient: req.user._id });
+        res.json({ success: true, message: 'All notifications deleted' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 // Export helper so other controllers can use it
 exports.createNotification = createNotification;
