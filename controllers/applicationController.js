@@ -45,17 +45,17 @@ exports.applyJob = async (req, res) => {
         try {
             const postedByUser = await User.findById(job.postedBy).select('name email');
             if (postedByUser) {
-                    sendNewApplicationEmail(postedByUser, applicant, job).catch(() => { });
-                    createNotification(
-                        job.postedBy,
-                        req.user._id,
-                        'new_application',
-                        'New Application Received',
-                        `${applicant.name} applied for ${job.title}`,
-                        '/applications',
-                        { jobId: job._id, applicationId: application._id }
-                    ).catch(() => { });
-                }
+                sendNewApplicationEmail(postedByUser, applicant, job).catch(() => { });
+                createNotification(
+                    job.postedBy,
+                    req.user._id,
+                    'new_application',
+                    'New Application Received',
+                    `${applicant.name} applied for ${job.title}`,
+                    '/applications',
+                    { jobId: job._id, applicationId: application._id }
+                ).catch(() => { });
+            }
         } catch (_) { }
 
         res.status(201).json({ success: true, message: 'Application submitted successfully', application });
@@ -210,7 +210,32 @@ exports.getCompanyApplications = async (req, res) => {
             .skip(skip)
             .limit(Number(limit));
 
-        res.json({ success: true, applications, total, totalPages: Math.ceil(total / Number(limit)) });
+        // Sync stale resume paths: if the applicant has re-uploaded their resume after applying,
+        // the application record may point to a deleted file. Use the live applicant resume instead
+        // and silently update the DB record in the background.
+        const staleIds = [];
+        const sanitized = applications.map(app => {
+            const appObj = app.toObject();
+            const liveResume = app.applicant?.resume;
+            const liveName = app.applicant?.resumeName;
+            if (liveResume && liveResume !== appObj.resume) {
+                appObj.resume = liveResume;
+                appObj.resumeName = liveName || appObj.resumeName;
+                staleIds.push({ id: app._id, resume: liveResume, resumeName: liveName });
+            }
+            return appObj;
+        });
+
+        if (staleIds.length > 0) {
+            // Fire-and-forget background update
+            Promise.all(
+                staleIds.map(({ id, resume, resumeName }) =>
+                    Application.findByIdAndUpdate(id, { resume, resumeName })
+                )
+            ).catch(err => console.error('Resume sync error:', err));
+        }
+
+        res.json({ success: true, applications: sanitized, total, totalPages: Math.ceil(total / Number(limit)) });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }

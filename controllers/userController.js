@@ -2,15 +2,50 @@ const User = require('../models/User');
 const Application = require('../models/Application');
 const Job = require('../models/Job');
 const Company = require('../models/Company');
+const ConnectionRequest = require('../models/ConnectionRequest');
 const path = require('path');
 const fs = require('fs');
 
 // @desc Get user profile
 exports.getProfile = async (req, res) => {
     try {
-        const user = await User.findById(req.params.id || req.user._id).select('-password');
+        const userId = req.params.id || req.user._id;
+        const user = await User.findById(userId).select('-password');
         if (!user) return res.status(404).json({ success: false, message: 'User not found' });
-        res.json({ success: true, user });
+
+        const profileData = user.toObject();
+
+        // If authenticated, check relationship status
+        if (req.user) {
+            const currentUserId = req.user._id;
+
+            // Check if following
+            profileData.isFollowing = user.followers.some(f => f.toString() === currentUserId.toString());
+
+            // Check connection status
+            if (user.connections.some(c => c.toString() === currentUserId.toString())) {
+                profileData.connectionStatus = 'connected';
+            } else {
+                const pendingRequest = await ConnectionRequest.findOne({
+                    $or: [
+                        { sender: currentUserId, recipient: userId },
+                        { sender: userId, recipient: currentUserId }
+                    ],
+                    status: 'pending'
+                });
+
+                if (pendingRequest) {
+                    profileData.connectionStatus = pendingRequest.sender.toString() === currentUserId.toString()
+                        ? 'sent'
+                        : 'received';
+                    profileData.requestId = pendingRequest._id;
+                } else {
+                    profileData.connectionStatus = 'none';
+                }
+            }
+        }
+
+        res.json({ success: true, user: profileData });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
