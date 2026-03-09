@@ -76,7 +76,17 @@ if (process.env.NODE_ENV === 'development') app.use(morgan('dev'));
 app.use('/api', limiter);
 
 // Static files for uploads
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', (req, res, next) => {
+    // Optional: Log static file requests for debugging
+    if (process.env.NODE_ENV === 'development') {
+        console.log(`[Static] Requesting file: ${req.url}`);
+    }
+    next();
+}, express.static(path.resolve(__dirname, 'uploads'), {
+    maxAge: '1d',
+    etag: true,
+    index: false
+}));
 
 // Routes
 app.use('/api/auth', authLimiter, require('./routes/authRoutes'));
