@@ -75,15 +75,14 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 if (process.env.NODE_ENV === 'development') app.use(morgan('dev'));
 app.use('/api', limiter);
 
-// Static files for uploads
+// Static files for uploads — Use no-cache in dev to avoid stale references
 app.use('/uploads', (req, res, next) => {
-    // Optional: Log static file requests for debugging
     if (process.env.NODE_ENV === 'development') {
-        console.log(`[Static] Requesting file: ${req.url}`);
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
     }
     next();
 }, express.static(path.resolve(__dirname, 'uploads'), {
-    maxAge: '1d',
+    maxAge: process.env.NODE_ENV === 'development' ? 0 : '1d',
     etag: true,
     index: false
 }));

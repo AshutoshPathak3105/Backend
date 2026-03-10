@@ -55,6 +55,7 @@ const userSchema = new mongoose.Schema({
     connections: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    followingCompanies: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Company' }],
     views: { type: Number, default: 0 }
 }, { timestamps: true });
 

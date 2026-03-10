@@ -32,7 +32,8 @@ const companySchema = new mongoose.Schema({
     reviewCount: { type: Number, default: 0 },
     isVerified: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },
-    totalJobs: { type: Number, default: 0 }
+    totalJobs: { type: Number, default: 0 },
+    followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
 }, { timestamps: true });
 
 // Auto-generate slug from company name before saving

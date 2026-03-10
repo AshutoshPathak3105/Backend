@@ -4,6 +4,8 @@ const Application = require('../models/Application');
 const slugify = require('slugify');
 const path = require('path');
 const fs = require('fs');
+const User = require('../models/User');
+const Notification = require('../models/Notification');
 
 // @desc Create company profile
 exports.createCompany = async (req, res) => {
@@ -137,6 +139,45 @@ exports.getCompanyJobs = async (req, res) => {
         const jobs = await Job.find({ company: company._id, status: 'active' })
             .sort({ createdAt: -1 });
         res.json({ success: true, jobs, total: jobs.length });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// @desc Toggle follow/unfollow company
+exports.toggleFollowCompany = async (req, res) => {
+    try {
+        const companyId = req.params.id;
+        const userId = req.user._id;
+
+        const company = await Company.findById(companyId);
+        if (!company) return res.status(404).json({ success: false, message: 'Company not found' });
+
+        const user = await User.findById(userId);
+        const isFollowing = company.followers.includes(userId);
+
+        if (isFollowing) {
+            // Unfollow
+            await Company.findByIdAndUpdate(companyId, { $pull: { followers: userId } });
+            await User.findByIdAndUpdate(userId, { $pull: { followingCompanies: companyId } });
+            res.json({ success: true, isFollowing: false, message: 'Unfollowed company' });
+        } else {
+            // Follow
+            await Company.findByIdAndUpdate(companyId, { $addToSet: { followers: userId } });
+            await User.findByIdAndUpdate(userId, { $addToSet: { followingCompanies: companyId } });
+
+            // Notification for company owner
+            await Notification.create({
+                recipient: company.owner,
+                sender: userId,
+                type: 'follow',
+                title: 'New Company Follower',
+                message: `${req.user.name} is now following ${company.name}`,
+                link: `/companies/${companyId}`
+            });
+
+            res.json({ success: true, isFollowing: true, message: 'Following company' });
+        }
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
