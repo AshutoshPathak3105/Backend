@@ -228,10 +228,12 @@ exports.toggleSaveJob = async (req, res) => {
 // @desc Get platform-wide job stats (for homepage)
 exports.getJobStats = async (req, res) => {
     try {
-        const [totalJobs, totalCompanies, totalApplications] = await Promise.all([
+        const User = require('../models/User');
+        const [totalJobs, totalCompanies, totalApplications, totalUsers] = await Promise.all([
             Job.countDocuments({ status: 'active' }),
             Company.countDocuments({ isActive: true }),
-            Application.countDocuments()
+            Application.countDocuments(),
+            User.countDocuments({ role: 'jobseeker' })
         ]);
         const categoryStats = await Job.aggregate([
             { $match: { status: 'active' } },
@@ -239,7 +241,7 @@ exports.getJobStats = async (req, res) => {
             { $sort: { count: -1 } },
             { $limit: 8 }
         ]);
-        res.json({ success: true, stats: { totalJobs, totalCompanies, totalApplications, categoryStats } });
+        res.json({ success: true, stats: { totalJobs, totalCompanies, totalApplications, totalUsers, categoryStats } });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
