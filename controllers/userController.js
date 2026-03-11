@@ -364,7 +364,11 @@ exports.getDashboardStats = async (req, res) => {
             Application.countDocuments({ applicant: req.user._id }),
             Application.countDocuments({ applicant: req.user._id, status: 'pending' }),
             Application.countDocuments({ applicant: req.user._id, status: 'shortlisted' }),
-            Application.countDocuments({ applicant: req.user._id, status: 'interview' }),
+            Application.countDocuments({
+                applicant: req.user._id,
+                status: 'interview',
+                interviewDate: { $gt: new Date(Date.now() - 2 * 60 * 60 * 1000) } // Only count future or recent (last 2h) interviews
+            }),
             Application.countDocuments({ applicant: req.user._id, status: 'offered' })
         ]);
         res.json({

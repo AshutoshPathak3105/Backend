@@ -13,9 +13,42 @@ const createNotification = async (recipientId, senderId, type, title, message, l
 };
 exports.createNotification = createNotification;
 
+const Application = require('../models/Application');
+
 // @desc Get current user's notifications
 exports.getMyNotifications = async (req, res) => {
     try {
+        // Just-in-time interview reminders
+        if (req.user.role === 'jobseeker') {
+            const thirtyMinFromNow = new Date(Date.now() + 30 * 60 * 1000);
+            const now = new Date();
+            const upcomingInterviews = await Application.find({
+                applicant: req.user._id,
+                status: 'interview',
+                interviewDate: { $gte: now, $lte: thirtyMinFromNow }
+            }).populate('job', 'title').populate('company', 'name');
+
+            for (const app of upcomingInterviews) {
+                const existing = await Notification.findOne({
+                    recipient: req.user._id,
+                    type: 'system',
+                    'meta.applicationId': app._id,
+                    createdAt: { $gt: new Date(Date.now() - 60 * 60 * 1000) } // Checked in last 1 hour
+                });
+                if (!existing) {
+                    await createNotification(
+                        req.user._id,
+                        null,
+                        'system',
+                        'Interview Reminder',
+                        `Your interview for ${app.job?.title} at ${app.company?.name} starts in less than 30 minutes!`,
+                        '/applications',
+                        { applicationId: app._id }
+                    );
+                }
+            }
+        }
+
         const { page = 1, limit = 20, unreadOnly } = req.query;
         const query = { recipient: req.user._id };
         if (unreadOnly === 'true') query.isRead = false;

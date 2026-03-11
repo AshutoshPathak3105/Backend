@@ -43,6 +43,9 @@ exports.getPosts = async (req, res) => {
         const limit = parseInt(req.query.limit) || 10;
         const query = {};
         if (req.query.author) query.author = req.query.author;
+        if (req.query.category && req.query.category !== 'All Roles') {
+            query.category = req.query.category;
+        }
 
         const posts = await Post.find(query)
             .sort({ createdAt: -1 })
@@ -60,7 +63,7 @@ exports.getPosts = async (req, res) => {
 // ── POST /posts  (create) ────────────────────────────────────────────────────
 exports.createPost = async (req, res) => {
     try {
-        const { text } = req.body;
+        const { text, category } = req.body;
         const files = req.files || [];
 
         if (!text && files.length === 0) {
@@ -72,7 +75,12 @@ exports.createPost = async (req, res) => {
             type: f.mimetype.startsWith('video') ? 'video' : 'image',
         }));
 
-        const post = await Post.create({ author: req.user._id, text, media });
+        const post = await Post.create({
+            author: req.user._id,
+            text,
+            media,
+            category: category || 'General'
+        });
         await post.populate('author', 'name avatar role headline');
 
         // Notify friends/connections

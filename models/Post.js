@@ -17,7 +17,8 @@ const postSchema = new mongoose.Schema({
     likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     comments: [commentSchema],
     shares: { type: Number, default: 0 },
-    views: { type: Number, default: 0 }
+    views: { type: Number, default: 0 },
+    category: { type: String, enum: ['Technology', 'General', 'Other'], default: 'General' }
 }, { timestamps: true });
 
 // Text or at least one media item is required
