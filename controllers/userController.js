@@ -54,8 +54,17 @@ exports.getProfile = async (req, res) => {
 // @desc Update user profile
 exports.updateProfile = async (req, res) => {
     try {
-        const { name, phone, location, bio, headline, website, skills, linkedIn, github, portfolio } = req.body;
+        const { name, phone, location, bio, headline, website, skills, linkedIn, github, portfolio, removeAvatar } = req.body;
         const user = await User.findById(req.user._id);
+        
+        if (removeAvatar === true || removeAvatar === 'true') {
+            if (user.avatar && user.avatar.startsWith('/uploads/')) {
+                const oldPath = path.join(__dirname, '..', user.avatar);
+                if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+            }
+            user.avatar = '';
+        }
+
         if (name) user.name = name;
         if (phone !== undefined) user.phone = phone;
         if (location !== undefined) user.location = location;
